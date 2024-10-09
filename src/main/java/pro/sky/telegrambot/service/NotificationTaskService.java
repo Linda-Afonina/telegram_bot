@@ -46,9 +46,14 @@ public class NotificationTaskService {
             notificationTaskRepository.save(notificationTask);
 
             sendMessage(chatID, "Напоминание успешно сохранено!");
+
+            logger.info("Parse and save for notification task with id {} completed successfully",
+                    notificationTask.getId());
         } else {
             sendMessage(chatID,
                     "Неверный формат. Используйте формат: 'dd.MM.yyyy HH:mm Текст напоминания'.");
+
+            logger.warn("Invalid format. Parse and save not completed");
         }
     }
 
@@ -64,12 +69,21 @@ public class NotificationTaskService {
     @Scheduled(cron = "0 0/1 * * * *")
     public void sendNotificationTask() {
         LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.MINUTES);
+
+        logger.info("Start sending notification task for date time {}", now);
+
         List<NotificationTask> notificationTaskList = notificationTaskRepository.findByNotificationDateTime(now);
+
+        logger.info("{} notification tasks have been found", notificationTaskList.size());
 
         for (NotificationTask notificationTask : notificationTaskList) {
             String message = "Напоминание: " + notificationTask.getMessage();
             long chatId = notificationTask.getChatId();
             sendMessage(chatId, message);
+
+            logger.info("Notification task with id {} has been sent successfully", notificationTask.getId());
         }
+
+        logger.info("Sending is finished");
     }
 }
